@@ -1,0 +1,645 @@
+openapi: '3.0.2'
+info:
+  title: MAKAN -application API
+  version: '1.0'
+servers:
+  # - url: https://api.server.test/v1
+  - url: http://localhost:3000
+    description: Local Development API
+  - url: https://staging.api.server.com
+    description: Staging API
+
+components:
+  securitySchemes:
+    bearerAuth:
+      description: '#### Example: Bearer [TOKEN]'
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    unprocessableEntityResponse:
+      description: Validation Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Invalid email or password combination
+    conflictResponse:
+      description: Conflict - Resource already exists
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: boolean
+                example: false
+              message:
+                type: string
+                example: "Resource with the provided name already exists."
+    notFoundResponse:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: boolean
+                example: false
+              message:
+                type: string
+                example: "The requested resource was not found."
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "An error occurred while processing the request"
+    UnauthorizedResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Unauthorized - Invalid or missing token"
+
+paths:
+
+  /job/jobList:
+    get:
+      summary: Get list of jobs
+      description: Fetches a list of jobs with optional search functionality.
+      tags:
+        - Jobs
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search keyword to filter jobs by title (optional).
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        title:
+                          type: string
+                        description:
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+        500:
+          description: Server error
+
+  /job/job/{id}:
+    get:
+      summary: Get job details
+      description: Fetches details of a specific job by ID.
+      tags:
+        - Jobs
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: ID of the job.
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      title:
+                        type: string
+                      description:
+                        type: string
+                      createdAt:
+                        type: string
+                        format: date-time
+        404:
+          description: Job not found
+        500:
+          description: Server error
+
+  /job/latestJob:
+    get:
+      summary: Get latest jobs
+      description: Fetches the latest 3 jobs.
+      tags:
+        - Jobs
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        title:
+                          type: string
+                        description:
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+        500:
+          description: Server error
+
+  /job/categoryJobs/{id}:
+    get:
+      summary: Get jobs by category
+      description: Fetches jobs by a specific category ID.
+      tags:
+        - Jobs
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Category ID for filtering jobs.
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        title:
+                          type: string
+                        description:
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+        404:
+          description: Category not found
+        500:
+          description: Server error
+
+  /job/jobSearcher:
+    post:
+      summary: Submit a job search request
+      description: API to allow users to submit their job search request with relevant details and resume.
+      tags:
+        - Job Search
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  example: John
+                  description: First name of the job searcher.
+                lastName:
+                  type: string
+                  example: Doe
+                  description: Last name of the job searcher.
+                email:
+                  type: string
+                  format: email
+                  example: johndoe@example.com
+                  description: Email address of the job searcher.
+                phone:
+                  type: string
+                  example: "1234567890"
+                  description: Phone number of the job searcher.
+                time:
+                  type: string
+                  example: "Full-time"
+                  description: Preferred work time (e.g., Full-time, Part-time).
+                gender:
+                  type: string
+                  enum:
+                    - Male
+                    - Female
+                    - Other
+                  example: Male
+                  description: Gender of the job searcher.
+                coverLatter:
+                  type: string
+                  example: "I am very excited about this opportunity."
+                  description: Cover letter for the job application.
+                jobId:
+                  type: integer
+                  example: 101
+                  description: The ID of the job being applied for.
+                resume:
+                  type: string
+                  format: binary
+                  description: The resume file to be uploaded.
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Job search request created successfully"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Job does not exist"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Email already exists"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Something went wrong"
+
+  /category/list:
+    get:
+      summary: Get a list of categories
+      description: This API retrieves a list of categories with optional search and pagination functionality.
+      tags:
+        - Category
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Success
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: Electronics
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 100
+                      perPage:
+                        type: integer
+                        example: 10
+                      currentPage:
+                        type: integer
+                        example: 1
+                      lastPage:
+                        type: integer
+                        example: 10
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid parameters  
+
+  /contact-us:
+    post:
+      summary: Submit a contact request
+      description: API to submit a contact request with name, email, subject, and message.
+      tags:
+        - Contact Us
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                  description: Full name of the user.
+                email:
+                  type: string
+                  format: email
+                  example: johndoe@example.com
+                  description: Email address of the user.
+                subject:
+                  type: string
+                  example: Inquiry about services
+                  description: Subject of the message.
+                message:
+                  type: string
+                  example: I would like to know more about your services.
+                  description: Detailed message from the user.
+              required:
+                - name
+                - email
+                - subject
+                - message
+      responses:
+        200:
+          description: Contact request created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Contact request created successfully
+        400:
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Validation error: missing or invalid fields
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Can't submit contact form
+
+  /blog/list:
+    get:
+      summary: Get a list of blog
+      description: This API retrieves a list of blog with optional search and pagination functionality.
+      tags:
+        - Blog
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Success
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: Electronics
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 100
+                      perPage:
+                        type: integer
+                        example: 10
+                      currentPage:
+                        type: integer
+                        example: 1
+                      lastPage:
+                        type: integer
+                        example: 10
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid parameters  
+
+  /blog/details/{id}:
+    get:
+      summary: Get blog details
+      description: Fetches details of a specific blog by ID.
+      tags:
+        - Blogs
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: ID of the job.
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      title:
+                        type: string
+                      description:
+                        type: string
+                      createdAt:
+                        type: string
+                        format: date-time
+        404:
+          description: Job not found
+        500:
+          description: Server error
+
+  /subscribe/:
+    post:
+      summary: Subscribe a user
+      description: Adds a user's email to the subscription list. If the email is already subscribed, it returns an appropriate message.
+      tags:
+        - Subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: The email address to subscribe.
+                  example: user@example.com
+      responses:
+        "200":
+          description: Subscription operation response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "User subscribed successfully"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Invalid email address"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Something went wrong, can't subscribe"
+                    
+
+  
