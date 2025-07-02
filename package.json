@@ -9,7 +9,7 @@
   "scripts": {
     "start:dev": "nodemon --exec babel-node src/app.js",
     "start:prod": "nodemon dist/app.js'",
-    "build": "rm -rf dist && npx babel src -d dist && cp -R src/views dist",
+    "build": "rm -rf dist && npx babel src -d dist",
     "format": "npx prettier src -w",
     "build:src": "babel src -d dist",
     "start": "node dist/app.js"
